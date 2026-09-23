@@ -47,8 +47,8 @@ func mapPrint(data *MapAreaList) error {
 	//fmt.Printf("count: %d\n", data.Count)
 	//fmt.Printf("next: %s\n", data.Next)
 	//fmt.Printf("previous: %s\n", data.Previous)
-	for _, result := range data.Results{
-		fmt.Printf("%s\n", result.Name)
+	for _, area := range data.Results{
+		fmt.Printf("%s\n", area.Name)
 	}
 	fmt.Println()
 

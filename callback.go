@@ -97,19 +97,14 @@ func commandMapB(c *config) error {
 	if err != nil {
 		return err
 	}
-	//if len(data.Areas) == 0 {
-	//	//fmt.Println("Empty struct returned")
-	//	return nil
-	//}
+	if len(data.Results) == 0 {
+		// Check if data is empty
+		return nil
+	}
 
 	// update config
-	fmt.Printf("Next: %s\n", data.Next)
-	fmt.Printf("Previous: %s\n", data.Previous)
-
 	c.nextURL = data.Next
-	if len(data.Previous) > 0 {
-		c.prevURL = data.Previous
-	}
+	c.prevURL = data.Previous
 
 	return nil
 }
