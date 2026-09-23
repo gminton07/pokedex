@@ -1,24 +1,56 @@
 package pokeapi
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
+//	"io"
 	"net/http"
 )
 
-func mapGet(url string) (any, error) {
+type MapAreaList struct {
+	Count        int `json:"count"`
+	Next         string `json:"next"`
+	Previous     string `json:"previous,omitempty"`
+	Results      []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	}
+}
+
+func MapGet(url string) (MapAreaList, error) {
+	// Check if url is "null"
+	if url == "null" || url == ""{
+		fmt.Println("You're on the first page\n")
+		return MapAreaList{}, nil
+	}
+
 	res, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return MapAreaList{}, err
 	}
-	body, err := io.ReadAll(res.Body)
-	res.Body.Close()
-	if res.StatusCode > 299 {
-		err := fmt.Errorf("Response failed with status code: %d and\nbody: %s", res.StatusCode, body)
-		return nil, err
-	}
+	defer res.Body.Close()
+	
+	//var map Map
+	var data MapAreaList
+	dec := json.NewDecoder(res.Body)
+	err = dec.Decode(&data)
 	if err != nil {
-		return nil, err
+		return MapAreaList{}, err
 	}
-	return "Success", nil
+
+	mapPrint(&data)
+
+	return data, nil
+}
+
+func mapPrint(data *MapAreaList) error {
+	//fmt.Printf("count: %d\n", data.Count)
+	//fmt.Printf("next: %s\n", data.Next)
+	//fmt.Printf("previous: %s\n", data.Previous)
+	for _, result := range data.Results{
+		fmt.Printf("%s\n", result.Name)
+	}
+	fmt.Println()
+
+	return nil
 }

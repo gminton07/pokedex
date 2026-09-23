@@ -5,7 +5,7 @@ import (
 	"os"
 	"errors"
 
-	"internal/pokeapi"
+	"github.com/gminton07/pokedex/internal/pokeapi"
 )
 
 type config struct{
@@ -34,6 +34,17 @@ func commandRegistry() map[string]cliCommand {
 			name:        "exit",
 			description: "Exit the Pokedex",
 			callback:    commandExit,
+		},
+		// map commands
+		"map": {
+			name:        "map",
+			description: "List next 20 map areas",
+			callback:    commandMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "List previous 20 map areas",
+			callback:    commandMapB,
 		},
 		// Add new commands
 	}
@@ -67,7 +78,38 @@ func commandHelp(c *config) error {
 
 func commandMap(c *config) error {
 	// Show next 20 locations
-	[pokeapi.mapGet](c.nextURL)
+	data, err := pokeapi.MapGet(c.nextURL)
+	if err != nil {
+		return err
+	}
+
+	// update config
+	c.nextURL = data.Next
+	c.prevURL = data.Previous
+
 	return nil
 
+}
+
+func commandMapB(c *config) error {
+	// Show previous 20 locations
+	data, err := pokeapi.MapGet(c.prevURL)
+	if err != nil {
+		return err
+	}
+	//if len(data.Areas) == 0 {
+	//	//fmt.Println("Empty struct returned")
+	//	return nil
+	//}
+
+	// update config
+	fmt.Printf("Next: %s\n", data.Next)
+	fmt.Printf("Previous: %s\n", data.Previous)
+
+	c.nextURL = data.Next
+	if len(data.Previous) > 0 {
+		c.prevURL = data.Previous
+	}
+
+	return nil
 }

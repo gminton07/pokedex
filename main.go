@@ -15,7 +15,7 @@ func main() {
 	localConfig := config{
 		commands: commandRegistry(),
 		nextURL:  "https://pokeapi.co/api/v2/location-area/",
-		prevURL:  nil,
+		prevURL:  "null",
 	}
 	fmt.Println("Welcome to the Pokedex!")
 
@@ -43,5 +43,8 @@ func main() {
 				fmt.Errorf("error: Command %s, %w", firstWord, err)
 			}
 		}
+		
+		// Testing code
+		//fmt.Printf("Config: %s\n", localConfig)
 	}
 }
