@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gminton07/pokedex/internal/pokecache"
+	"github.com/gminton07/pokedex/internal/pokeapi"
 )
 
 func main() {
@@ -17,10 +18,12 @@ func main() {
 	// initialize config
 	localConfig := Config{
 		Commands: commandRegistry(),
-		BaseURL:  "https://pokeapi.co/api/v2/location-area/",
+		AreaBaseURL:  "https://pokeapi.co/api/v2/location-area/",
+		PokemonBaseURL: "https://pokeapi.co/api/v2/pokemon/",
 		NextURL:  "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20",
 		PrevURL:  "null",
 		Cache:    pokecache.NewCache(30 * time.Second),
+		Pokedex: make(map[string]pokeapi.Pokemon),
 	}
 	fmt.Println("Welcome to the Pokedex!")
 

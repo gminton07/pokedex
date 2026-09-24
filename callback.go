@@ -11,12 +11,16 @@ import (
 
 type Config struct{
 	Commands 	map[string]cliCommand
-	BaseURL 	string
+	// Base URLs
+	AreaBaseURL 	string
+	PokemonBaseURL  string
 	// map/mapb
 	NextURL 	string
 	PrevURL 	string
 	// command cache
 	Cache           pokecache.Cache
+	// User Pokedex
+	Pokedex 	map[string]pokeapi.Pokemon
 	// Add more parameters as need arises
 }
 
@@ -52,8 +56,23 @@ func commandRegistry() map[string]cliCommand {
 		},
 		"explore": {
 			name:        "explore",
-			description: "List pokemon in map area. Arg: name",
+			description: "List pokemon in map area. Arg: area_name",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Attempt to catch pokemon. Arg: pokemon_name",
+			callback:    commandCatch,
+		},
+		"inspect": {
+			name:        "inspect",
+			description: "Show info about caught pokemon. Arg: pokemon_name",
+			callback:    commandInspect,
+		},
+		"pokemon": {
+			name:        "pokemon",
+			description: "List pokemon currently in Pokedex",
+			callback:    commandPokemon,
 		},
 		// Add new commands
 	}
@@ -124,11 +143,90 @@ func commandExplore(C *Config, args []string) error {
 		return errors.New(`error: "explore" command requires "area_name" argument`)
 	}
 
-	url := C.BaseURL + args[0]
+	url := C.AreaBaseURL + args[0]
 	err := pokeapi.GetAreaPokemon(url, &C.Cache)
 	if err != nil {
 		return err
 	}
 	
+	return nil
+}
+
+func commandCatch(C *Config, args []string) error {
+	// Catch chosen pokemon
+
+	if len(args) < 1 {
+		return errors.New(`error: "explore" command requires "pokemon_name" argument`)
+	}
+
+	pokemonName := args[0]
+
+	// Check for pokemon in C.Pokedex
+	if _, ok := C.Pokedex[pokemonName]; ok {
+		fmt.Printf("Already have %s in pokedex\n", pokemonName)
+		return nil
+	}
+
+	// Otherwise
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonName)
+
+	url := C.PokemonBaseURL + pokemonName
+	pokemon, err := pokeapi.GetPokemon(url)
+	if err != nil {
+		return err
+	}
+	if pokemon.Name == "" {
+		fmt.Printf("%s escaped!\n", pokemonName)
+		return nil
+	}
+	
+	fmt.Printf("%s was caught!\n", pokemonName)
+	C.Pokedex[pokemonName] = pokemon
+	
+	return nil
+
+}
+
+func commandInspect(C *Config, args []string) error {
+	// Show info about pokemon in the pokedex
+
+	if len(args) < 1 {
+		return errors.New(`error: "inspect" command requires "pokemon_name" argument`)
+	}
+
+	// Check for pokemon in C.Pokedex
+	pokemonName := args[0]
+	v, ok := C.Pokedex[pokemonName]
+	if !ok {
+		fmt.Printf("You have not caught that pokemon\n")
+		return nil
+	}
+
+	// Print information
+	fmt.Printf("Name: %s\n", v.Name)
+	fmt.Printf("ID: %d\n", v.ID)
+	fmt.Printf("Height: %d\n", v.Height)
+	fmt.Printf("Weight: %d\n", v.Weight)
+	fmt.Println("Stats:")
+	for _, s := range v.Stats {
+		fmt.Printf("  - %s: %d\n", s.Stat.Name, s.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, t := range v.Types {
+		fmt.Printf("  - %s\n", t.Type.Name)
+	}
+
+	return nil
+}
+
+func commandPokemon(C *Config, args []string) error {
+	// List caught pokemon
+
+	fmt.Println("You have these pokemon:")
+
+	for k, _ := range C.Pokedex {
+		fmt.Println(k)
+	} 
+
 	return nil
 }
