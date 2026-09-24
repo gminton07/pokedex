@@ -17,6 +17,7 @@ func main() {
 	// initialize config
 	localConfig := Config{
 		Commands: commandRegistry(),
+		BaseURL:  "https://pokeapi.co/api/v2/location-area/",
 		NextURL:  "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20",
 		PrevURL:  "null",
 		Cache:    pokecache.NewCache(30 * time.Second),
@@ -27,28 +28,28 @@ func main() {
 		// read
 		fmt.Print("Pokedex > ")
 
-		var args []string
-
-		for scanner.Scan() {
-			continue
-		}
-		if err := scanner.Err(); err != nil {
-			fmt.Println("Error:", err)
+		if done := scanner.Scan(); !done {
+			if err := scanner.Err(); err != nil {
+				fmt.Println("Error:", err)
+			}
 		}
 
 		str := scanner.Text()
 		command := cleanInput(str)
 
 		// eval && print
-		firstWord := command[0]
-		if command, ok := localConfig.Commands[firstWord]; !ok {
+		cmd := command[0]
+		args := command[1:]
+		
+		if command, ok := localConfig.Commands[cmd]; !ok {
 			fmt.Println("Unknown command")
 		} else {
-			err := command.callback(&localConfig)
+			err := command.callback(&localConfig, args)
 			if err != nil {
-				fmt.Errorf("error: Command %s, %w", firstWord, err)
+				fmt.Println(fmt.Errorf("error: Command %s, %w", cmd, err))
 			}
 		}
+		fmt.Println()
 		
 		// Testing code
 		//fmt.Printf("Config: %s\n", localConfig)

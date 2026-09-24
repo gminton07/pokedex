@@ -11,6 +11,7 @@ import (
 
 type Config struct{
 	Commands 	map[string]cliCommand
+	BaseURL 	string
 	// map/mapb
 	NextURL 	string
 	PrevURL 	string
@@ -23,7 +24,7 @@ type Config struct{
 type cliCommand struct {
 	name 		string
 	description 	string
-	callback 	func(*Config) error
+	callback 	func(*Config, []string) error
 }
 
 func commandRegistry() map[string]cliCommand {
@@ -49,18 +50,23 @@ func commandRegistry() map[string]cliCommand {
 			description: "List previous 20 map areas",
 			callback:    commandMapB,
 		},
+		"explore": {
+			name:        "explore",
+			description: "List pokemon in map area. Arg: name",
+			callback:    commandExplore,
+		},
 		// Add new commands
 	}
 	return cliCommandMap
 }
 
-func commandExit(c *Config) error {
+func commandExit(c *Config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(c *Config) error {
+func commandHelp(c *Config, args []string) error {
 	cliCommandMap := c.Commands
 	if len(cliCommandMap) < 1 {
 		err := errors.New("error: no commands in registry")
@@ -74,12 +80,11 @@ func commandHelp(c *Config) error {
 	for _, v := range cliCommandMap {
 		fmt.Printf("%s:\t%s\n", v.name, v.description)
 	}
-	fmt.Println()
 
 	return nil
 }
 
-func commandMap(C *Config) error {
+func commandMap(C *Config, args []string) error {
 	// Show next 20 locations
 	data, err := pokeapi.MapGet(C.NextURL, &C.Cache)
 	if err != nil {
@@ -94,7 +99,7 @@ func commandMap(C *Config) error {
 
 }
 
-func commandMapB(C *Config) error {
+func commandMapB(C *Config, args []string) error {
 	// Show previous 20 locations
 	data, err := pokeapi.MapGet(C.PrevURL, &C.Cache)
 	if err != nil {
@@ -109,5 +114,21 @@ func commandMapB(C *Config) error {
 	C.NextURL = data.Next
 	C.PrevURL = data.Previous
 
+	return nil
+}
+
+func commandExplore(C *Config, args []string) error {
+	// Show pokemon which exist in a map area
+	
+	if len(args) < 1 {
+		return errors.New(`error: "explore" command requires "area_name" argument`)
+	}
+
+	url := C.BaseURL + args[0]
+	err := pokeapi.GetAreaPokemon(url, &C.Cache)
+	if err != nil {
+		return err
+	}
+	
 	return nil
 }
