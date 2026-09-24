@@ -1,4 +1,7 @@
 # Executable
 pokedex
+
+# Nonsense
 repl.log
 go.sum
+*.swp

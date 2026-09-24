@@ -6,13 +6,16 @@ import (
 	"errors"
 
 	"github.com/gminton07/pokedex/internal/pokeapi"
+	"github.com/gminton07/pokedex/internal/pokecache"
 )
 
-type config struct{
-	commands 	map[string]cliCommand
+type Config struct{
+	Commands 	map[string]cliCommand
 	// map/mapb
-	nextURL 	string
-	prevURL 	string
+	NextURL 	string
+	PrevURL 	string
+	// command cache
+	Cache           pokecache.Cache
 	// Add more parameters as need arises
 }
 
@@ -20,7 +23,7 @@ type config struct{
 type cliCommand struct {
 	name 		string
 	description 	string
-	callback 	func(*config) error
+	callback 	func(*Config) error
 }
 
 func commandRegistry() map[string]cliCommand {
@@ -51,21 +54,21 @@ func commandRegistry() map[string]cliCommand {
 	return cliCommandMap
 }
 
-func commandExit(c *config) error {
+func commandExit(c *Config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(c *config) error {
-	cliCommandMap := c.commands
+func commandHelp(c *Config) error {
+	cliCommandMap := c.Commands
 	if len(cliCommandMap) < 1 {
 		err := errors.New("error: no commands in registry")
 		return err
 	}
 
 	// Print intro
-	fmt.Println("Usage:\n")
+	fmt.Println("Usage:")
 
 	// loop through map
 	for _, v := range cliCommandMap {
@@ -76,24 +79,24 @@ func commandHelp(c *config) error {
 	return nil
 }
 
-func commandMap(c *config) error {
+func commandMap(C *Config) error {
 	// Show next 20 locations
-	data, err := pokeapi.MapGet(c.nextURL)
+	data, err := pokeapi.MapGet(C.NextURL, &C.Cache)
 	if err != nil {
 		return err
 	}
 
 	// update config
-	c.nextURL = data.Next
-	c.prevURL = data.Previous
+	C.NextURL = data.Next
+	C.PrevURL = data.Previous
 
 	return nil
 
 }
 
-func commandMapB(c *config) error {
+func commandMapB(C *Config) error {
 	// Show previous 20 locations
-	data, err := pokeapi.MapGet(c.prevURL)
+	data, err := pokeapi.MapGet(C.PrevURL, &C.Cache)
 	if err != nil {
 		return err
 	}
@@ -103,8 +106,8 @@ func commandMapB(c *config) error {
 	}
 
 	// update config
-	c.nextURL = data.Next
-	c.prevURL = data.Previous
+	C.NextURL = data.Next
+	C.PrevURL = data.Previous
 
 	return nil
 }

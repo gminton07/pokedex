@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"bufio"
 	"os"
+	"time"
+
+	"github.com/gminton07/pokedex/internal/pokecache"
 )
 
 func main() {
@@ -12,10 +15,11 @@ func main() {
 
 	// REPL loop
 	// initialize config
-	localConfig := config{
-		commands: commandRegistry(),
-		nextURL:  "https://pokeapi.co/api/v2/location-area/",
-		prevURL:  "null",
+	localConfig := Config{
+		Commands: commandRegistry(),
+		NextURL:  "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20",
+		PrevURL:  "null",
+		Cache:    pokecache.NewCache(30 * time.Second),
 	}
 	fmt.Println("Welcome to the Pokedex!")
 
@@ -23,11 +27,13 @@ func main() {
 		// read
 		fmt.Print("Pokedex > ")
 
-		done := scanner.Scan()
-		if done == false {
-			if err := scanner.Err; err != nil {
-				fmt.Errorf("error: %w", err)
-			}	
+		var args []string
+
+		for scanner.Scan() {
+			continue
+		}
+		if err := scanner.Err(); err != nil {
+			fmt.Println("Error:", err)
 		}
 
 		str := scanner.Text()
@@ -35,7 +41,7 @@ func main() {
 
 		// eval && print
 		firstWord := command[0]
-		if command, ok := localConfig.commands[firstWord]; !ok {
+		if command, ok := localConfig.Commands[firstWord]; !ok {
 			fmt.Println("Unknown command")
 		} else {
 			err := command.callback(&localConfig)
