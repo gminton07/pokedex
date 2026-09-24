@@ -69,10 +69,10 @@ func commandRegistry() map[string]cliCommand {
 			description: "Show info about caught pokemon. Arg: pokemon_name",
 			callback:    commandInspect,
 		},
-		"pokemon": {
-			name:        "pokemon",
+		"pokedex": {
+			name:        "pokedex",
 			description: "List pokemon currently in Pokedex",
-			callback:    commandPokemon,
+			callback:    commandPokedex,
 		},
 		// Add new commands
 	}
@@ -219,13 +219,13 @@ func commandInspect(C *Config, args []string) error {
 	return nil
 }
 
-func commandPokemon(C *Config, args []string) error {
+func commandPokedex(C *Config, args []string) error {
 	// List caught pokemon
 
 	fmt.Println("You have these pokemon:")
 
 	for k, _ := range C.Pokedex {
-		fmt.Println(k)
+		fmt.Printf("  - %s\n", k)
 	} 
 
 	return nil
